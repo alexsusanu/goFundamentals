@@ -1,19 +1,35 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"html/template"
+	"log"
 	"net/http"
 )
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
+func executeTemplate(w http.ResponseWriter, filepath string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<h1>Welcome</h1>")
+	t, err := template.ParseFiles(filepath)
+	if err != nil {
+		log.Printf("parsing template %v", err)
+		http.Error(w, "error parsing", http.StatusInternalServerError)
+		return
+	}
+	err = t.Execute(w, nil)
+	if err != nil {
+		log.Printf("executing template error %v", err)
+		http.Error(w, "error executing", http.StatusInternalServerError)
+		return
+	}
+
+}
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	executeTemplate(w, "templates/home.gohtml")
 }
 
 func contactHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	http.ServeFile(w, r, "static/contact.html")
+	executeTemplate(w, "templates/contact.gohtml")
 }
 
 type Router struct{}
@@ -31,10 +47,8 @@ func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	//var router Router
-	//fmt.Println("Starting on :3000")
-	//http.ListenAndServe(":3000", router)
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 	r.Get("/", homeHandler)
 	r.Get("/contact", contactHandler)
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
