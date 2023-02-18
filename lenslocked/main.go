@@ -3,27 +3,21 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"html/template"
+	"lenslocked/lenslocked/views"
 	"log"
 	"net/http"
 )
 
 func executeTemplate(w http.ResponseWriter, filepath string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	t, err := template.ParseFiles(filepath)
+	tpl, err := views.Parse(filepath)
 	if err != nil {
-		log.Printf("parsing template %v", err)
-		http.Error(w, "error parsing", http.StatusInternalServerError)
+		log.Printf("parsing template: %v", err)
+		http.Error(w, "There was an error parsing the template.", http.StatusInternalServerError)
 		return
 	}
-	err = t.Execute(w, nil)
-	if err != nil {
-		log.Printf("executing template error %v", err)
-		http.Error(w, "error executing", http.StatusInternalServerError)
-		return
-	}
-
+	tpl.Execute(w, nil)
 }
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	executeTemplate(w, "templates/home.gohtml")
 }
