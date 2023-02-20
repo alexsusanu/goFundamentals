@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"lenslocked/lenslocked/controllers"
 	"lenslocked/lenslocked/views"
 	"log"
 	"net/http"
@@ -28,22 +29,27 @@ func contactHandler(w http.ResponseWriter, r *http.Request) {
 
 type Router struct{}
 
-func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
-	case "/":
-		homeHandler(w, r)
-	case "/contact":
-		contactHandler(w, r)
-	default:
-		//errorHandling(w, http.StatusNotFound)
-		http.Error(w, "Page not found", http.StatusNotFound)
-	}
-}
+//func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+//	switch r.URL.Path {
+//	case "/":
+//		homeHandler(w, r)
+//	case "/contact":
+//		contactHandler(w, r)
+//	default:
+//		//errorHandling(w, http.StatusNotFound)
+//		http.Error(w, "Page not found", http.StatusNotFound)
+//	}
+//}
 
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Get("/", homeHandler)
+	tpl, err := views.Parse("templates/index.gohtml")
+	if err != nil {
+		panic(err)
+	}
+	r.Get("/", controllers.StaticHandler(tpl))
+
 	r.Get("/contact", contactHandler)
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
